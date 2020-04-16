@@ -1,5 +1,6 @@
 # vue-cli-plugin-ftp
 
+```JavaScript
 // 1.安装插件
   vue add ftp
 
@@ -13,3 +14,5 @@
 
 // 3.package.json中 build的命令修改为
   vue-cli-service build --no-clean && vue-cli-service ftpdeploy
+
+  ```
