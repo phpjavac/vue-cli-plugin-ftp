@@ -8,7 +8,7 @@
   pluginOptions: {
     ftp: {
       host: "192.168.31.147", // ftp地址
-      remoteFtpPath: "DISK-D/findsoft_test/tomcat8/webapps/policy/" // 项目地址
+      remoteFtpPath: "DISK-D/soft/tomcat8/webapps/product/" // 项目地址
      }
   },
 
