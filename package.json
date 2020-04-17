@@ -8,6 +8,10 @@
   },
   "author": "",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phpjavac/vue-cli-plugin-ftp.git"
+},
   "dependencies": {
     "ftp": "^0.3.10",
     "single-line-log": "^1.1.2"
