@@ -1,8 +1,6 @@
-
 const Client = require("ftp");
 const fs = require("fs");
 const ProgressBar = require("./src/progress_bar");
-const { rejects } = require("assert");
 module.exports = (api, projectOptions) => {
     api.registerCommand('ftpdeploy', () => {
 
@@ -37,8 +35,7 @@ module.exports = (api, projectOptions) => {
                 const actions = [];
                 const actions1 = [];
                 const fileList = [];
-                console.log(2222);
-                
+    
                 fs.readdir(filepath, { withFileTypes: true }, (err, files) => {
                     if (err) rej(err);
                     if (files.length > 0) {
@@ -102,33 +99,12 @@ module.exports = (api, projectOptions) => {
             });
         }
 
-        // const deleteDir = (DirPath) => {
-        //     return new Promise((res, rej) => {
-        //         const actions = []
-        //         for (let index = 0; index < DirPath.length; index++) {
-        //             actions.push(new Promise((resolve, reject) => {
-        //                 ftp.rmdir(DirPath[index], true, (err) => {
-        //                     console.log(err);
-        //                 })
-        //                 resolve()
-        //             }))
-        //         }
-        //         Promise.all(actions).then(resolve => {
-        //             db.render({completed: DirPath.length, total: DirPath.length})
-        //             res('删除完成')
-        //             console.log('删除完成');
-        //         })
-                
-        //     })
-        // }
         /** 删除文件 */
         const deleteFiles = (filePath)=> {
-
             return new Promise((res, rej) => {
                 const actions = []; // 读取server文件action
                 const fileList = []; // 需要处理的files
                 const actionDel = []; // 执行操作action
-                console.log(1111);
                 ftp.list(filePath, (err, files) => {
                     if (err) rej(err);
                     if ( files && files.length > 0) {
@@ -137,7 +113,7 @@ module.exports = (api, projectOptions) => {
                             const action = () => {
                                 return new Promise(resolve => {
                                     ( (file) => {
-                                        if (file.type === '-' || file.type === 'l') {
+                                        if (file.type === '-') {
                                             // this is file
                                             const delPath = `${filePath}/${file.name}`
                                             fileList.push({...file, delPath})
@@ -146,7 +122,12 @@ module.exports = (api, projectOptions) => {
                                             // this is directory
                                             const delPath = `${filePath}/${file.name}`
                                             deleteFiles(delPath)
-                                            // resolve()
+                                            resolve()
+                                        } else {
+                                            // i dont know, symlink?
+                                            const delPath = `${filePath}/${file.name}`
+                                            fileList.push({...file, delPath})
+                                            resolve()
                                         }
                                     })(fileIndex)
                                 })
@@ -162,7 +143,7 @@ module.exports = (api, projectOptions) => {
                                         ftp.delete(f.delPath, (de)=>{
                                             if (de) console.log(de)
                                         })
-                                        ftp.end();
+                                        // ftp.end();
                                         db.render({completed: i, total: fileList.length})
                                         resolve()
                                     })
@@ -176,17 +157,16 @@ module.exports = (api, projectOptions) => {
                             })
                         })
                     } else {
-                        // ftp.end()
                         res(`${filePath}无内容`)
                     }
                 })
-                
             })
         }
         /** 清空文件(夹) */
-        function removeFile(removePath, removeArr = ['js', 'css']) {
+        async function removeFile(removePath, removeArr = ['js', 'css']) {
             return new Promise( (res, rej) => {
                 const actionList = []
+                const actionDirectory = []
                 
                 let arr = [];
                 ftp.list(removePath, (rErr, rList)=>{
@@ -200,15 +180,27 @@ module.exports = (api, projectOptions) => {
                         if (arr && arr.length > 0) {
                             for (let i=0; i<arr.length; i++) {
                                 const path = `${remoteFtpPath}${arr[i]}`
+                                // console.log(`${path}---path`)
                                 actionList.push(deleteFiles(path))
+                                // const actionDir = () => {
+                                //     return new Promise(resD => {
+                                //         ftp.rmdir(path, true, (errD)=>{
+                                //             if (errD) console.log(errD)
+                                //             resD()
+                                //         })
+                                //     })
+                                // }
+                                // actionDirectory.push(actionDir())
                             }
                         } else {
                             rej('请检测参数')
                         }
-                        // console.log(actionList, 'actionList');
                         Promise.all(actionList).then(()=>{
                             console.log('文件删除完毕，开始上传...')
                             res('删除完毕')
+                            // Promise.all(actionDirectory).then(()=>{
+                            //     res('文件夹也删除完了')
+                            // })
                         }).catch(err=>{
                             console.log('this is removeFile catch————————\n',err)
                             rej(err)
@@ -220,48 +212,23 @@ module.exports = (api, projectOptions) => {
                 
             })
         }
-
-
-        // ftp.connect(connectionProperties)
-
-        // ftp.on("ready",async () => {
-        //     try {
-        //         if (DelArrPath) {
-        //             db = new ProgressBar('正在删除...', 0)
-        //             // console.log(deleteFiles(DelArrPath), 'deleteFiles(DelArrPath)');
-        //             deleteFiles(DelArrPath)
-                    
-
-        //         }
-        //     } catch (delErr) {
-        //         console.log('删除方法有异常\n', delErr)
-        //     }
-            
-        // });
-
-        // fs.readdir(dirPath, { withFileTypes: true }, (err, files) => {
-        //     pb = new ProgressBar("正在上传...", 0);
-        //     readFiles(dirPath)
-        // })
-
-
-        ftp.connect(connectionProperties)
+        ftp.connect(connectionProperties);
 
         ftp.on("ready", async () => {
-            db = new ProgressBar('正在删除...', 0)
-            const a = await deleteFiles(DelArrPath)
-            console.log(a);
-            console.log(1111111111111111111111111111111111);
+            try {
+                if (DelArrPath) {
+                    db = new ProgressBar('正在删除...', 0)
+                    await removeFile(remoteFtpPath, DelArrPath)
+                }
+            } catch (delErr) {
+                console.log('删除方法有异常\n', delErr)
+            }
+            fs.readdir(dirPath, { withFileTypes: true }, (err, files) => {
+                pb = new ProgressBar("正在上传...", 0);
+                readFiles(dirPath)
+            })
         });
-        fs.readdir(dirPath, { withFileTypes: true }, async (err, files) => {
-            pb = new ProgressBar("正在上传...", 0);
-            await readFiles(dirPath)
-        })
-        // fs.readdir(dirPath, { withFileTypes: true }, (err, files) => {
-        //     pb = new ProgressBar("正在上传...", 0);
-        //     readFiles(dirPath).then(res => {
-        //         console.log(res);
-        //     })
-        // })
+
+
     })
 }
