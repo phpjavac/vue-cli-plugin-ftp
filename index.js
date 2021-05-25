@@ -1,4 +1,3 @@
-
 const Client = require("ftp");
 const fs = require("fs");
 const ProgressBar = require("./src/progress_bar");
@@ -63,7 +62,7 @@ module.exports = (api, projectOptions) => {
                                             // 目录
                                             const child_filepath = `${filepath}${file.name}/`;
                                             readFiles(child_filepath)
-                                            resolve();
+                                            // resolve();
                                         }
                                     })(file1);
                                 });
@@ -75,7 +74,7 @@ module.exports = (api, projectOptions) => {
                                 const action = () => {
                                     return new Promise(resolve => {
                                         const element = fileList[index];
-                                        ftp.mkdir(element.dir, false, (() => {
+                                        ftp.mkdir(element.dir, true, (() => {
                                             ftp.put(element.data, element.dirName, (err2) => {
                                                 if (err) {
                                                     console.log(err);
