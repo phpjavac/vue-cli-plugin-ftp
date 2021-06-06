@@ -62,7 +62,7 @@ module.exports = (api, projectOptions) => {
                                             // 目录
                                             const child_filepath = `${filepath}${file.name}/`;
                                             readFiles(child_filepath)
-                                            // resolve();
+                                            resolve();
                                         }
                                     })(file1);
                                 });
@@ -79,7 +79,7 @@ module.exports = (api, projectOptions) => {
                                                 if (err) {
                                                     console.log(err);
                                                 }
-                                                ftp.end();
+                                                // ftp.end();
                                                 pb.render({ completed: index, total: fileList.length });
                                                 resolve();
                                             });
@@ -121,8 +121,9 @@ module.exports = (api, projectOptions) => {
                                         } else if (file.type === 'd') {
                                             // this is directory
                                             const delPath = `${filePath}/${file.name}`
-                                            deleteFiles(delPath)
-                                            resolve()
+                                            deleteFiles(delPath).then(()=>{
+                                                resolve()
+                                            })
                                         } else {
                                             // i dont know, symlink?
                                             const delPath = `${filePath}/${file.name}`
@@ -170,7 +171,10 @@ module.exports = (api, projectOptions) => {
                 
                 let arr = [];
                 ftp.list(removePath, (rErr, rList)=>{
-                    if (rErr) rej(err);
+                    if (rErr) {
+                        console.log(rErr, '--------------')
+                        rej(err);
+                    }
                     if (rList && rList.length > 0) {
                         arr = rList.filter(rf=>{
                             return removeArr.includes(rf.name) && rf.type === 'd'
@@ -180,27 +184,33 @@ module.exports = (api, projectOptions) => {
                         if (arr && arr.length > 0) {
                             for (let i=0; i<arr.length; i++) {
                                 const path = `${remoteFtpPath}${arr[i]}`
-                                // console.log(`${path}---path`)
                                 actionList.push(deleteFiles(path))
-                                // const actionDir = () => {
-                                //     return new Promise(resD => {
-                                //         ftp.rmdir(path, true, (errD)=>{
-                                //             if (errD) console.log(errD)
-                                //             resD()
-                                //         })
-                                //     })
-                                // }
-                                // actionDirectory.push(actionDir())
                             }
                         } else {
                             rej('请检测参数')
                         }
                         Promise.all(actionList).then(()=>{
-                            console.log('文件删除完毕，开始上传...')
-                            res('删除完毕')
-                            // Promise.all(actionDirectory).then(()=>{
-                            //     res('文件夹也删除完了')
-                            // })
+                            console.log('文件删除完毕，开始删除文件夹...')
+                            /** 不能在上面的for里push删除dir的promise，因为那个时候文件还没删除完
+                             * 虽然promise是pending状态，但其实那个时候的promise保存的是有文件的删除方法(rmdir一定会报错) 
+                             * 所以在删除所有文件后，再去定义新的promise-删除文件夹
+                            */
+                            for (let i=0; i<arr.length; i++) {
+                                const path = `${remoteFtpPath}${arr[i]}`
+                                const actionDir = () => {
+                                    return new Promise(resD => {
+                                        ftp.rmdir(path, true, (errD)=>{
+                                            if (errD) console.log(errD,'??????')
+                                            console.log(`${path}文件夹删除完毕`)
+                                            resD()
+                                        })
+                                    })
+                                }
+                                actionDirectory.push(actionDir())
+                            }
+                            Promise.all(actionDirectory).then(()=>{
+                                res('文件夹删除完毕')
+                            })
                         }).catch(err=>{
                             console.log('this is removeFile catch————————\n',err)
                             rej(err)
@@ -219,13 +229,16 @@ module.exports = (api, projectOptions) => {
                 if (DelArrPath) {
                     db = new ProgressBar('正在删除...', 0)
                     await removeFile(remoteFtpPath, DelArrPath)
+                    console.log('删除完毕，开始上传...')
                 }
             } catch (delErr) {
                 console.log('删除方法有异常\n', delErr)
             }
             fs.readdir(dirPath, { withFileTypes: true }, (err, files) => {
                 pb = new ProgressBar("正在上传...", 0);
-                readFiles(dirPath)
+                readFiles(dirPath).finally(()=>{
+                    ftp.end();
+                })
             })
         });
 
