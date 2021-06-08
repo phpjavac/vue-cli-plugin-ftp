@@ -8,7 +8,8 @@
   pluginOptions: {
     ftp: {
       host: "192.168.31.147", // ftp地址
-      remoteFtpPath: "DISK-D/soft/tomcat8/webapps/product/" // 项目地址
+      remoteFtpPath: "DISK-D/soft/tomcat8/webapps/product/", // 项目地址
+      delArr: ['css', 'js', 'img'] // 上传前需要删除的文件夹-非必填-不建议上传非英文名文件
      }
   },
 
