@@ -1,4 +1,4 @@
-const Client = require("ftp");
+const Client = require("@findsoft/ftp");
 const fs = require("fs");
 const ProgressBar = require("./src/progress_bar");
 module.exports = (api, projectOptions) => {
@@ -55,7 +55,7 @@ module.exports = (api, projectOptions) => {
                                                 // if(chineseTest.test(file.name)) {
                                                 //     console.log('这里面有中文', file.name);
                                                 // }
-                                                const newName = chineseTest.test(file.name) ? encodeURIComponent(file.name) : file.name
+                                                const newName = file.name
                                                 const data1 = {
                                                     dir,
                                                     dirName: `${dir}/${newName}`,
