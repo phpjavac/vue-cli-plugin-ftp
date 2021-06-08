@@ -29,6 +29,8 @@ module.exports = (api, projectOptions) => {
         let pb = null;
         let db = null;
         const ACTIONS = []
+        const chineseTest = /.*[\u4e00-\u9fa5]+.*$/ // 中文
+        const ChineseFolder = [] // 中文名文件夹
         /** 递归写入文件 */
         function readFiles(filepath) {
             return new Promise((res, rej) => {
@@ -50,9 +52,13 @@ module.exports = (api, projectOptions) => {
                                             fs.readFile(child_filepath, (err1, data) => {
                                                 if (err1) throw err1;
                                                 const dir = remoteFtpPath + filepath.replace(dirPath, "").replace("\\", "/");
+                                                // if(chineseTest.test(file.name)) {
+                                                //     console.log('这里面有中文', file.name);
+                                                // }
+                                                const newName = chineseTest.test(file.name) ? encodeURIComponent(file.name) : file.name
                                                 const data1 = {
                                                     dir,
-                                                    dirName: `${dir}/${file.name}`,
+                                                    dirName: `${dir}/${newName}`,
                                                     data
                                                 };
                                                 fileList.push(data1);
