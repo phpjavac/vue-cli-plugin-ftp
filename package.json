@@ -1,6 +1,6 @@
 {
   "name": "vue-cli-plugin-ftp",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -13,7 +13,7 @@
     "url": "git+https://github.com/phpjavac/vue-cli-plugin-ftp.git"
   },
   "dependencies": {
-    "ftp": "^0.3.10",
+    "@findsoft/ftp": "^0.3.3",
     "single-line-log": "^1.1.2"
   }
 }
