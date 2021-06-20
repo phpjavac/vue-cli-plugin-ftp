@@ -20,6 +20,7 @@ module.exports = (api, projectOptions) => {
         };
         const remoteFtpPath = projectOptions.pluginOptions.ftp.remoteFtpPath // '/F/ftpserve-home' //
         const hasWhite = projectOptions.pluginOptions.ftp.whiteList || false; // false表示没设置白名单，不执行删除、空数组表示不保护任何文件，否则保护数组文件
+        const hasUploadWhite = projectOptions.pluginOptions.ftp.uploadWhite || false; // true上传不会覆盖，false会覆盖。（上传是否也需要白名单保护）
         const whiteList = projectOptions.pluginOptions.ftp.whiteList || []; // 白名单-入参-文件&文件夹
         const serveWhite = whiteList.map( path => {
             return remoteFtpPath + path
@@ -83,6 +84,7 @@ module.exports = (api, projectOptions) => {
                     if (files.length > 0) {
                         for (let index = 0; index < files.length; index++) {
                             const file1 = files[index];
+                            
                             const action = () => { // 将每一次循环方法定义为一个方法变量
                                 return new Promise(resolve => { // 每个方法返回一个Promise对象，第一个参数为resolve方法
                                     ((file) => {
@@ -98,13 +100,19 @@ module.exports = (api, projectOptions) => {
                                                     dirName: `${dir}/${newName}`,
                                                     data
                                                 };
-                                                fileList.push(data1);
+                                                
+                                                const uploadWhite = serveWhite.includes(`${dir}${newName}`);
+                                                if (!hasUploadWhite) fileList.push(data1);
+                                                else if (!uploadWhite) fileList.push(data1);
                                                 resolve();
                                             });
                                         } else {
                                             // 目录
                                             const child_filepath = `${filepath}${file.name}/`;
-                                            readFiles(child_filepath)
+                                            const dir = remoteFtpPath + filepath.replace(dirPath, "").replace("\\", "/");
+                                            const uploadWhite = serveWhite.includes(`${dir}${file.name}`);
+                                            if (!hasUploadWhite) readFiles(child_filepath);
+                                            else if (!uploadWhite) readFiles(child_filepath);
                                             resolve();
                                         }
                                     })(file1);
