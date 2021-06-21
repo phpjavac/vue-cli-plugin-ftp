@@ -16,16 +16,10 @@
 
 // 3.package.json中 build的命令修改为
   vue-cli-service build --no-clean && vue-cli-service ftpdeploy
-
-// 4.remark
-  // whiteList
-  // 如果不设置，不执行删除操作
-  // 如果设置[]，表示上传前会清空所有文件
-  // 否则会按照入参，保留对应文件
-
-  // uploadWhite
-  // 上传文件，是否要按白名单过滤
-  // 默认值 false
-  // true-不会覆盖文件
-  // false-会用新文件覆盖
   ```
+| 属性 | 说明 | 类型 | 默认值 | 必填 | 版本 |
+|---|---|---|---|---|---|
+| host | ftp服务地址 | ip地址 | '' | 是 | |
+| remoteFtpPath | 需要ftp操作的文件地址 | string | '' | 是 ||
+| whiteList | 需要保护的白名单数组，不填表示只上传。[]会删除地址对应所有文件 | string[] | undefined | 否 | >1.4.1 |
+| uploadWhite | 配合whiteList使用，上传文件时，如果为true，则不会上传白名单里的文件。默认会上传 | boolean | false | 否 | >1.4.1 |
