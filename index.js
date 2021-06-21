@@ -19,9 +19,9 @@ module.exports = (api, projectOptions) => {
             host: projectOptions.pluginOptions.ftp.host // '192.168.1.101' // 
         };
         const remoteFtpPath = projectOptions.pluginOptions.ftp.remoteFtpPath // '/F/ftpserve-home' //
-        const hasWhite = projectOptions.pluginOptions.ftp.whiteList || false; // false表示没设置白名单，不执行删除、空数组表示不保护任何文件，否则保护数组文件
-        const hasUploadWhite = projectOptions.pluginOptions.ftp.uploadWhite || false; // true上传不会覆盖，false会覆盖。（上传是否也需要白名单保护）
-        const whiteList = projectOptions.pluginOptions.ftp.whiteList || []; // 白名单-入参-文件&文件夹
+        const hasWhite = projectOptions.pluginOptions.ftp.deleteWhite || false; // false表示没设置白名单，不执行删除、空数组表示不保护任何文件，否则保护数组文件
+        const uploadWhiteList = projectOptions.pluginOptions.ftp.uploadWhite || []; // 上传白名单-文件夹
+        const whiteList = projectOptions.pluginOptions.ftp.deleteWhite || []; // 白名单-入参-文件&文件夹
         const serveWhite = whiteList.map( path => {
             return remoteFtpPath + path
         }); // 白名单-匹配服务器地址-list
@@ -100,9 +100,8 @@ module.exports = (api, projectOptions) => {
                                                     dirName: `${dir}/${newName}`,
                                                     data
                                                 };
-                                                
-                                                const uploadWhite = serveWhite.includes(`${dir}${newName}`);
-                                                if (!hasUploadWhite) fileList.push(data1);
+                                                const uploadWhite = uploadWhiteList.includes(`${dir}${newName}`.replace(remoteFtpPath, ''));
+                                                if (!uploadWhiteList.length) fileList.push(data1);
                                                 else if (!uploadWhite) fileList.push(data1);
                                                 resolve();
                                             });
@@ -110,8 +109,8 @@ module.exports = (api, projectOptions) => {
                                             // 目录
                                             const child_filepath = `${filepath}${file.name}/`;
                                             const dir = remoteFtpPath + filepath.replace(dirPath, "").replace("\\", "/");
-                                            const uploadWhite = serveWhite.includes(`${dir}${file.name}`);
-                                            if (!hasUploadWhite) readFiles(child_filepath);
+                                            const uploadWhite = uploadWhiteList.includes(`${dir}${file.name}`.replace(remoteFtpPath, ''));
+                                            if (!uploadWhiteList.length) readFiles(child_filepath);
                                             else if (!uploadWhite) readFiles(child_filepath);
                                             resolve();
                                         }
